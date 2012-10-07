@@ -40,7 +40,7 @@ class Log < ActiveRecord::Base
   end
 
   def update_last_current
-    last_current_at = Time.now
+    self.last_current_at = Time.now
   end
 end
 
