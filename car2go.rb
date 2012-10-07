@@ -8,6 +8,8 @@ class Log < ActiveRecord::Base
   self.table_name = 'log'
   scope :last_known, ->(name) { where(name: name).order('created_at DESC').limit(1) }
 
+  before_create :update_last_current
+
   def initialize(attrs = {})
     if json = attrs.delete(:json)
       super({
@@ -36,6 +38,10 @@ class Log < ActiveRecord::Base
   def relevant_attributes
     attributes.reject{|k,v| %w(id created_at updated_at).include?(k) }
   end
+
+  def update_last_current
+    last_current_at = Time.now
+  end
 end
 
 class Trip < ActiveRecord::Base
@@ -47,7 +53,7 @@ class Trip < ActiveRecord::Base
   before_save :fetch_directions
 
   def duration
-    self.end.created_at - self.start.created_at
+    self.end.created_at - (self.start.last_current_at || self.start.created_at)
   end
 
   def cost
@@ -138,7 +144,10 @@ cars.each do |car|
   last_known = Log.last_known(car['name']).first
 
   if current.similar_to?(last_known)
-    # puts "- No change for '#{current.name}'"
+    if last_known
+      last_known.update_last_current
+      last_known.save
+    end
   else
     current.save
     puts "+ Saved new log entry for '#{current.name}'"
