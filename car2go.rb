@@ -36,7 +36,7 @@ class Log < ActiveRecord::Base
   end
 
   def relevant_attributes
-    attributes.reject{|k,v| %w(id created_at updated_at).include?(k) }
+    attributes.reject{|k,v| %w(id created_at updated_at last_current_at).include?(k) }
   end
 
   def update_last_current
