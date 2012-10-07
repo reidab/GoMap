@@ -1,0 +1,5 @@
+development:
+  adapter: postgresql
+  encoding: utf8
+  database: car2go
+  username: hack
