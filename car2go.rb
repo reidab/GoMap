@@ -60,35 +60,52 @@ class Trip < ActiveRecord::Base
     JSON.parse(json)
   end
 
-  def narrative
-    self.directions['route']['legs'].map{|leg|
-      leg['maneuvers'].map{|maneuver| 
-        maneuver['narrative']
-      }
-    }.flatten
+  def path
+    self.directions['path']
   end
 
-  def path
-    path = []
+  def mapquest_static_url
+    "http://open.mapquestapi.com/staticmap/v4/getmap?size=512,512&type=map" +
+      "&scenter=#{self.start.latitude},#{self.start.longitude}" +
+      "&ecenter=#{self.end.latitude},#{self.end.longitude}" +
+      "&polyline=color:0x770000ff|width:5|" +
+      self.path.flatten.join(',')
+  end
 
-    self.directions['route']['legs'].each{|leg|
-      leg['maneuvers'].each{|maneuver| 
-        path << [maneuver['startPoint']['lng'], maneuver['startPoint']['lat']]
-      }
-    }
-
-    path
+  def google_static_url
+    "https://maps.googleapis.com/maps/api/staticmap?size=512x512&maptype=roadmap&sensor=false" +
+      "&markers=color:green|label:A|#{self.start.latitude},#{self.start.longitude}" +
+      "&markers=color:red|label:A|#{self.end.latitude},#{self.end.longitude}" +
+      "&path=color:0x0000ff|weight:5|" +
+      self.path.map{|p| p.join(',')}.join('|')
   end
 
   def fetch_directions(force=false)
     return directions if self[:directions].present? && !force
-    response = HTTParty.get("http://open.mapquestapi.com/directions/v1/route",
-                            query: {
-                              outFormat: 'json',
-                              from: "#{self.start.latitude},#{self.start.longitude}",
-                              to: "#{self.end.latitude},#{self.end.longitude}" })
+    guidance_response = HTTParty.get("http://open.mapquestapi.com/guidance/v1/route",
+                                      query: {
+                                        outFormat: 'json',
+                                        from: "#{self.start.latitude},#{self.start.longitude}",
+                                        to: "#{self.end.latitude},#{self.end.longitude}",
+                                        generalizeAfter: 1,
+                                        enableFishbone: false })
+    guidance = guidance_response['guidance']
 
-    self.directions = response.body
+    directions_response = HTTParty.get("http://open.mapquestapi.com/directions/v1/route",
+                                        query: {
+                                          outFormat: 'json',
+                                          from: "#{self.start.latitude},#{self.start.longitude}",
+                                          to: "#{self.end.latitude},#{self.end.longitude}" })
+    route = directions_response['route']
+
+    self.directions = {
+      :path => [].tap{|path| guidance['generalizedShape'].each_slice(2){|s| path << s}},
+      :fuel_used => guidance['FuelUsed'],
+      :duration => guidance['DefaultRouteTime'],
+      :bounding_box => guidance['boundingBox'],
+      :distance => route['distance'],
+      :narrative => route['legs'].map{|leg| leg['maneuvers'].map{|maneuver| maneuver['narrative'] }}.flatten
+    }.to_json
   end
 
   def update_directions
@@ -126,10 +143,12 @@ cars.each do |car|
     current.save
     puts "+ Saved new log entry for '#{current.name}'"
     if last_known
-      puts "    Diff:" + last_known.relevant_attributes.diff(current.relevant_attributes).inspect
-      trip = Trip.create!(start: last_known, end: current)
-      puts "    [#{trip.cost}] #{last_known.address} ===> #{current.address}"
-      # puts trip.narrative.map{|n| "     - " + n}
+      diff = last_known.relevant_attributes.diff(current.relevant_attributes)
+      puts "    Diff:" + diff.inspect
+      if diff.has_key?('address')
+        trip = Trip.create!(start: last_known, end: current)
+        puts "    [#{trip.cost}] #{last_known.address} ===> #{current.address}"
+      end
     end
   end
 end
