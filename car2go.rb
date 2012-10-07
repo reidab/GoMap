@@ -99,6 +99,10 @@ end
 LOCATION = 'portland'
 CONSUMER_KEY = 'GoMap'
 
+puts ""
+puts "=" * 80
+puts "Starting run at #{Time.now}"
+
 response = HTTParty.get("http://www.car2go.com/api/v2.1/vehicles", 
                         query: { loc: LOCATION,
                                  oauth_consumer_key: CONSUMER_KEY,
@@ -125,7 +129,7 @@ cars.each do |car|
       puts "    Diff:" + last_known.relevant_attributes.diff(current.relevant_attributes).inspect
       trip = Trip.create!(start: last_known, end: current)
       puts "    [#{trip.cost}] #{last_known.address} ===> #{current.address}"
-      puts trip.narrative.map{|n| "     - " + n}
+      # puts trip.narrative.map{|n| "     - " + n}
     end
   end
 end
