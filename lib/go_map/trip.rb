@@ -8,6 +8,8 @@ module GoMap
     before_save :fetch_directions
     before_save :cache_times_and_car_name
 
+    scope :active_at, ->(time) { where('start_time <= :time AND end_time >= :time', time: time) }
+
     def directions
       json = super
       json = fetch_directions unless json.present?
@@ -34,6 +36,51 @@ module GoMap
 
     def cost
       sprintf("$%.2f", (duration / 60) * 0.35)
+    end
+
+    # GEOS Calculations
+
+    def geos_wkt_reader
+      @geos_reader ||= Geos::WktReader.new
+    end
+
+    def geos_line_string
+      @geos_line_string ||= geos_wkt_reader.read("LINESTRING(#{path.map{|p| p.reverse.join(' ')}.join(', ')})")
+    end
+
+    def time_percent(time)
+      time_percent = (time - start_time) / duration
+    end
+
+    def distance_travelled_at(time)
+      time_percent(time) * geos_line_string.length
+    end
+
+    def geos_point_at(time)
+      geos_line_string.interpolate(distance_travelled_at(time))
+    end
+
+    def location_at(time)
+      geos_point = geos_point_at(time)
+      [geos_point.y, geos_point.x]
+    end
+
+    def completed_path_at(time)
+      return path if geos_point_at(time) == geos_line_string.end_point
+      dist = distance_travelled_at(time)
+
+      # there's a better way to do this in the GEOS C code, but the FFI bindings don't expose it
+
+      0.upto(path.size - 1) do |i|
+        p = path[0..i]
+        p *= 2 if p.size == 1 # ensure a valid line string
+        ls = geos_wkt_reader.read("LINESTRING(#{p.map{|p| p.reverse.join(' ')}.join(', ')})")
+        if ls.interpolate(dist) == ls.end_point
+          # we've covered this entire path and can move on
+        else
+          return p[0..-2] << location_at(time)
+        end
+      end
     end
 
     def mapquest_static_url

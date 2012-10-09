@@ -30,6 +30,12 @@ GEM
     bouncy-castle-java (1.5.0146.1)
     builder (3.0.3)
     erubis (2.7.0)
+    ffi (1.1.5)
+    ffi (1.1.5-java)
+    ffi-geos (0.0.6)
+      ffi (>= 1.0.0)
+      rake (~> 0.9)
+      rdoc
     hike (1.2.1)
     httparty (0.9.0)
       multi_json (~> 1.0)
@@ -81,6 +87,7 @@ PLATFORMS
 DEPENDENCIES
   activerecord
   activerecord-jdbcpostgresql-adapter
+  ffi-geos
   httparty
   jruby-openssl
   pg
