@@ -7,12 +7,8 @@ module GoMap
 
     before_save :fetch_directions
 
-    def duration
-      self.end.created_at - (self.start.last_current_at || self.start.created_at)
-    end
-
-    def cost
-      sprintf("$%.2f", (duration / 60) * 0.35)
+    def car_name
+      self.start.name
     end
 
     def directions
@@ -21,8 +17,34 @@ module GoMap
       JSON.parse(json)
     end
 
-    def path
-      self.directions['path']
+    %w(path distance narrative).each do |key|
+      define_method(key) do
+        self.directions[key]
+      end
+    end
+
+    def estimated_fuel_used
+      self.directions['fuel_used']
+    end
+
+    def estimated_duration
+      self.directions['duration']
+    end
+
+    def start_time
+      self.start.last_current_at
+    end
+
+    def end_time
+      self.end.created_at
+    end
+
+    def duration
+      end_time - start_time
+    end
+
+    def cost
+      sprintf("$%.2f", (duration / 60) * 0.35)
     end
 
     def mapquest_static_url
