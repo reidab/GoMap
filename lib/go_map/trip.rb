@@ -6,10 +6,7 @@ module GoMap
     validates_presence_of :end
 
     before_save :fetch_directions
-
-    def car_name
-      self.start.name
-    end
+    before_save :cache_times_and_car_name
 
     def directions
       json = super
@@ -29,14 +26,6 @@ module GoMap
 
     def estimated_duration
       self.directions['duration']
-    end
-
-    def start_time
-      self.start.last_current_at
-    end
-
-    def end_time
-      self.end.created_at
     end
 
     def duration
@@ -93,6 +82,13 @@ module GoMap
 
     def update_directions
       fetch_directions(true)
+    end
+
+    def cache_times_and_car_name(force=false)
+      self.start_time = self.start.last_current_at if force || self.start_time.nil?
+      self.end_time   = self.end.created_at if force || self.end_time.nil?
+      self.car_name   = self.start.name if force || self.car_name.nil?
+      self.estimated_start_time = self.end_time - self.estimated_duration if force || self.estimated_start_time.nil?
     end
   end
 end

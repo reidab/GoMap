@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121007204742) do
+ActiveRecord::Schema.define(:version => 20121009031403) do
 
   create_table "log", :force => true do |t|
     t.string   "address"
@@ -31,9 +31,15 @@ ActiveRecord::Schema.define(:version => 20121007204742) do
   end
 
   create_table "trips", :force => true do |t|
-    t.integer "start_id"
-    t.integer "end_id"
-    t.text    "directions"
+    t.integer  "start_id"
+    t.integer  "end_id"
+    t.text     "directions"
+    t.string   "car_name"
+    t.datetime "start_time"
+    t.datetime "end_time"
+    t.datetime "estimated_start_time"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
 end

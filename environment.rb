@@ -8,7 +8,7 @@ dbconfig = YAML::load(File.open(File.join(ROOT_PATH, 'db/config.yml')))
 db_env = (RUBY_PLATFORM == "java") ? 'development_jruby' : 'development'
 
 ActiveRecord::Base.default_timezone = :utc
-ActiveRecord::Base.establish_connection(dbconfig[db_env])
+ActiveRecord::Base.establish_connection(dbconfig[db_env]) unless ActiveRecord::Base.connected?
 
 Dir.glob(File.join(ROOT_PATH, 'lib','go_map','*.rb')).each {|rb|
   require rb
