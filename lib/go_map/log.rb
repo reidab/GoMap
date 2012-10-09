@@ -2,6 +2,7 @@ module GoMap
   class Log < ActiveRecord::Base
     self.table_name = 'log'
     scope :last_known, ->(name) { where(name: name).order('created_at DESC').limit(1) }
+    scope :current_at, ->(time) { where('created_at <= :time AND last_current_at >= :time', time: time) }
 
     before_create :update_last_current
 
