@@ -6,6 +6,7 @@ ROOT_PATH = File.dirname(__FILE__)
 
 dbconfig = YAML::load(File.open(File.join(ROOT_PATH, 'db/config.yml')))
 ActiveRecord::Base.establish_connection(dbconfig['development'])
+ActiveRecord::Base.default_timezone = :utc
 
 Dir.glob(File.join(ROOT_PATH, 'lib','go_map','*.rb')).each {|rb|
   require rb
