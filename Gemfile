@@ -5,6 +5,7 @@ gem 'standalone_migrations'
 gem 'activerecord'
 gem 'httparty'
 gem 'ffi-geos'
+gem 'activerecord-postgis-adapter', git: "https://github.com/GUI/activerecord-postgis-adapter.git", branch: 'jdbc'
 
 platform :ruby do
   gem 'pg'
