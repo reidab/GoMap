@@ -14,11 +14,11 @@ module GoMap
 
       puts "Retrieved #{cars.length} cars"
 
-      in_use = Log.select(:name).uniq.map(&:name) - cars.map{|c| c['name']}
-
-      puts "Cars currently in use:"
-      puts in_use.inspect
-
+#      in_use = Log.select(:name).uniq.map(&:name) - cars.map{|c| c['name']}
+#
+#      puts "Cars currently in use:"
+#      puts in_use.inspect
+#
       cars.each do |car|
         current = Log.new(json: car)
         last_known = Log.last_known(car['name']).first
