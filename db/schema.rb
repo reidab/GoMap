@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20121009031403) do
+ActiveRecord::Schema.define(:version => 20121101000000) do
 
   create_table "log", :force => true do |t|
     t.string   "address"
@@ -30,6 +30,8 @@ ActiveRecord::Schema.define(:version => 20121009031403) do
     t.datetime "last_current_at"
   end
 
+  add_index "log", ["name"], :name => "index_log_on_name"
+
   create_table "trips", :force => true do |t|
     t.integer  "start_id"
     t.integer  "end_id"
@@ -41,5 +43,7 @@ ActiveRecord::Schema.define(:version => 20121009031403) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  add_index "trips", ["car_name"], :name => "index_trips_on_car_name"
 
 end
