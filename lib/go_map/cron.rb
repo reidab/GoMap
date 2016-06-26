@@ -32,7 +32,11 @@ module GoMap
           current.save
           puts "+ Saved new log entry for '#{current.name}'"
           if last_known
-            diff = last_known.relevant_attributes.diff(current.relevant_attributes)
+            # Replace ActiveSupport's old Hash#diff
+            h1 = last_known.relevant_attributes
+            h2 = current.relevant_attributes
+            diff = h1.dup.delete_if { |k, v| h2[k] == v }.merge(h2.dup.delete_if { |k, v| h1.has_key?(k) })
+
             puts "    Diff:" + diff.inspect
             if diff.has_key?('address')
               trip = Trip.create!(start: last_known, end: current)
